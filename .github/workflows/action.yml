@@ -4,12 +4,6 @@ on:
   push:
     branches:
       - main
-      - master
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
 
 jobs:
   job1:
@@ -20,14 +14,14 @@ jobs:
 
       - name: Build Artifact 1
         run: |
-          mkdir -p artifacts
-          echo "Content of Artifact 1" > artifacts/artifact1.txt
+          mkdir -p dist
+          echo "Content of Artifact 1" > dist/artifact1.txt
 
       - name: Upload Artifact 1
         uses: actions/upload-artifact@v3
         with:
           name: artifact1
-          path: artifacts/artifact1.txt
+          path: dist/artifact1.txt
 
   job2:
     runs-on: ubuntu-latest
@@ -37,14 +31,14 @@ jobs:
 
       - name: Build Artifact 2
         run: |
-          mkdir -p artifacts
-          echo "Content of Artifact 2" > artifacts/artifact2.txt
+          mkdir -p dist
+          echo "Content of Artifact 2" > dist/artifact2.txt
 
       - name: Upload Artifact 2
         uses: actions/upload-artifact@v3
         with:
           name: artifact2
-          path: artifacts/artifact2.txt
+          path: dist/artifact2.txt
 
   deploy:
     runs-on: ubuntu-latest
@@ -57,24 +51,22 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: artifact1
-          path: artifacts
+          path: dist
 
       - name: Download Artifact 2
         uses: actions/download-artifact@v3
         with:
           name: artifact2
-          path: artifacts
+          path: dist
+
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v3
+
+      - name: Upload Artifact to GitHub Pages
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: "./dist"
 
       - name: Deploy to GitHub Pages
-        run: |
-          mkdir -p public
-          mv artifacts/* public/
-          echo "github-pages deployment" > public/index.html
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Push to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: public
+        id: deployment
+        uses: actions/deploy-pages@v2
